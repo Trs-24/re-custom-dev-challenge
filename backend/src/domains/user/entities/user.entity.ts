@@ -48,6 +48,6 @@ export class User {
 
   get recentActivity(): Activity[] {
     const amountOfActivityNeeded = 5;
-    return this.activity.slice(-amountOfActivityNeeded);
+    return this.activity.slice(0, amountOfActivityNeeded);
   }
 }

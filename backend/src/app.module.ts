@@ -6,7 +6,6 @@ import { UserModule } from './domains/user/user.module';
 import { ReportModule } from './domains/report/report.module';
 import { ActivityModule } from './domains/activity/activity.module';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -38,10 +37,6 @@ import { JwtModule } from '@nestjs/jwt';
       }),
     }),
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secret',
-      signOptions: { expiresIn: '1h' },
-    }),
     AuthModule,
     UserModule,
     ReportModule,

@@ -31,17 +31,24 @@ export class AuthService {
   }
 
   async generateToken(user: User) {
-    return this.jwtService.sign({ sub: user.id, email: user.email });
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   async register(userData: CreateUserDto) {
-    const existingUser = await this.userService.findByEmail(userData.email);
+    const existingUser = await this.userService.findByEmail(
+      userData.email,
+      true,
+    );
     if (existingUser)
       throw new ConflictException('User with this email exists');
 
     const user = await this.userService.createUser(userData);
     return {
-      access_token: this.generateToken(user),
+      access_token: await this.generateToken(user),
     };
   }
 
@@ -49,7 +56,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<{ user: User; isValid: boolean }> {
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userService.findByEmailOrThrow(email, true);
 
     const isPasswordValid = await this.comparePasswords(
       password,
@@ -77,7 +84,7 @@ export class AuthService {
     });
 
     return {
-      access_token: this.generateToken(user),
+      access_token: await this.generateToken(user),
     };
   }
 }

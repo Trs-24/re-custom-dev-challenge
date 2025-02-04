@@ -2,12 +2,24 @@ import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { Response } from 'express';
 import { UserService } from 'src/domains/user/user.service';
+import { ActivityService } from '../activity/activity.service';
+import { ActivityAction, ActivityStatus } from '../activity/activity.types';
 
 @Injectable()
 export class ReportService {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly activityService: ActivityService,
+  ) {}
   async generateUserReport(userId: string, response: Response) {
     const user = await this.userService.findById(userId, true);
+
+    await this.activityService.createActivity({
+      user,
+      action: ActivityAction.DOWNLOAD_REPORT,
+      status: ActivityStatus.SUCCESS,
+    });
+
     const doc = new PDFDocument();
 
     response.setHeader('Content-Type', 'application/pdf');
@@ -15,6 +27,7 @@ export class ReportService {
       'Content-Disposition',
       `attachment; filename=${user.email}_report.pdf`,
     );
+    response.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
 
     doc.pipe(response);
 
@@ -40,10 +53,10 @@ export class ReportService {
     doc.text('Status', 400, tableTop);
     doc.moveDown();
 
-    user.recentActivity.forEach((activity: any, index: number) => {
+    user.activity.forEach((activity: any, index: number) => {
       const y = tableTop + 20 + index * 20;
       doc.text(activity.action, 50, y);
-      doc.text(activity.date, 250, y);
+      doc.text(new Date(activity.createdAt).toDateString(), 250, y);
       doc.text(activity.status, 400, y);
     });
 

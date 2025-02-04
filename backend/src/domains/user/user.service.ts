@@ -22,7 +22,10 @@ export class UserService {
     private readonly activityService: ActivityService,
   ) {}
 
-  async findByEmail(email: string, withRelations = false): Promise<User> {
+  async findByEmailOrThrow(
+    email: string,
+    withRelations = false,
+  ): Promise<User> {
     return this.userRepository.findOneOrFail({
       where: { email },
       relations: withRelations
@@ -30,26 +33,86 @@ export class UserService {
             activity: true,
           }
         : undefined,
+      order: { activity: { createdAt: 'DESC' } },
+    });
+  }
+
+  async findByEmail(
+    email: string,
+    withRelations = false,
+  ): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { email },
+      relations: withRelations
+        ? {
+            activity: true,
+          }
+        : undefined,
+      order: { activity: { createdAt: 'DESC' } },
     });
   }
 
   async findById(id: string, withRelations = false): Promise<User> {
-    return this.userRepository.findOneOrFail({
+    const user = await this.userRepository.findOneOrFail({
       where: { id },
       relations: withRelations
         ? {
             activity: true,
           }
         : undefined,
+      order: { activity: { createdAt: 'DESC' } },
     });
+
+    return user;
+  }
+
+  async findByIdWithStatistics(
+    id: string,
+  ): Promise<{ user: User; totalLogins: number; totalDownloads: number }> {
+    const user = await this.userRepository.findOneOrFail({
+      where: { id },
+      relations: {
+        activity: true,
+      },
+      order: { activity: { createdAt: 'DESC' } },
+    });
+
+    user.activity = user.recentActivity;
+
+    return {
+      user,
+      totalDownloads: user.totalDownloads,
+      totalLogins: user.totalLogins,
+    };
   }
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    const users = await this.userRepository.find({
+      relations: { activity: true },
+      order: { activity: { createdAt: 'DESC' } },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        activity: {
+          id: true,
+          action: true,
+          status: true,
+          createdAt: true,
+        },
+      },
+    });
+
+    users.forEach(user => {
+      user.activity = user.recentActivity;
+    });
+
+    return users;
   }
 
   async remove(id: string): Promise<void> {
-    const user = await this.findById(id);
+    const user = await this.findById(id, true);
 
     await this.userRepository.remove(user);
   }
@@ -78,7 +141,7 @@ export class UserService {
   }
 
   async updateUser(id: string, userData: UpdateUserDto): Promise<User> {
-    const user = await this.findById(id);
+    const user = await this.findById(id, true);
 
     Object.assign(user, userData);
     const savedUser = await this.userRepository.save(user);

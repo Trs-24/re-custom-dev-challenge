@@ -1,13 +1,15 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Get, Param, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { ReportService } from './report.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('pdf')
+@UseGuards(JwtAuthGuard)
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
-  @Get(':user-id')
-  async generatePdf(@Param('user-id') userId: string, @Res() res: Response) {
+  @Get(':id')
+  async generatePdf(@Param('id') userId: string, @Res() res: Response) {
     return await this.reportService.generateUserReport(userId, res);
   }
 }
