@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AuthModule } from './domains/auth/auth.module';
+import { UserModule } from './domains/user/user.module';
+import { ReportModule } from './domains/report/report.module';
+import { ActivityModule } from './domains/activity/activity.module';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -33,8 +37,17 @@ import { AppService } from './app.service';
         },
       }),
     }),
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'secret',
+      signOptions: { expiresIn: '1h' },
+    }),
+    AuthModule,
+    UserModule,
+    ReportModule,
+    ActivityModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
