@@ -24,6 +24,14 @@ async function bootstrap() {
 
   app.use(express.static(join(__dirname, '..', 'public')));
 
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api/')) {
+      res.sendFile(join(__dirname, '..', 'public', 'index.html'));
+    } else {
+      next();
+    }
+  });
+
   await app.listen(3000, '0.0.0.0');
 }
 bootstrap();
