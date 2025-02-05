@@ -13,6 +13,12 @@ export async function seedUsersWithActivity(dataSource: DataSource) {
   const userRepository = dataSource.getRepository(User);
   const activityRepository = dataSource.getRepository(Activity);
 
+  const existingUsers = await userRepository.count();
+  if (existingUsers > 0) {
+    console.log('Users already seeded, skipping...');
+    return;
+  }
+
   const users: User[] = [];
 
   // Create admin user

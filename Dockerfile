@@ -12,4 +12,4 @@ RUN cd backend && npm install
 COPY backend/ ./backend
 COPY --from=build-frontend /app/frontend/dist ./backend/public
 WORKDIR /app/backend
-ENTRYPOINT ["sh", "-c", "npm run migration:run && npm run start"]
+ENTRYPOINT ["sh", "-c", "npm run migration:run && npm run seed && npm run start"]
