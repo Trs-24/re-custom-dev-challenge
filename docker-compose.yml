@@ -12,11 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - postgr_data:/var/lib/postgresql/data/
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "myuser"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
@@ -36,6 +31,5 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - db:
-        condition: service_healthy
+      - db
       - pgadmin
